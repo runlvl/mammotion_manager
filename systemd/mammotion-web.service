@@ -1,0 +1,22 @@
+[Unit]
+Description=Mammotion Web (FastAPI, EU region)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+WorkingDirectory=%h/mammotion-app
+EnvironmentFile=%h/mammotion-app/.env
+ExecStart=%h/mammotion-app/.venv/bin/uvicorn src.mammotion_web.app:app --host 0.0.0.0 --port 5000 --log-level info --no-server-header --proxy-headers
+Restart=on-failure
+RestartSec=5s
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target
