@@ -459,9 +459,8 @@ class StandaloneMammotionWebGUI:
             }
         });
         
-        // Demo-Daten einfügen für schnellen Test
-        document.getElementById('email').value = 'test@mammotion.com';
-        document.getElementById('password').value = 'testpassword';
+        // Bereit für echte Mammotion-Zugangsdaten
+        document.getElementById('email').focus();
     </script>
 </body>
 </html>
@@ -786,9 +785,9 @@ def main():
     print("   • Responsive Design")
     print("   • Plattformunabhängig")
     print()
-    print("🚀 Demo-Login:")
-    print("   E-Mail: test@mammotion.com")
-    print("   Passwort: testpassword")
+    print("🚀 Anmeldung:")
+    print("   Verwenden Sie Ihre echten Mammotion-Zugangsdaten")
+    print("   Keine Demo-Modi verfügbar")
     print()
     print("Drücken Sie Ctrl+C zum Beenden")
     print()

@@ -143,7 +143,7 @@ class RealMammotionClient:
             return False
             
     async def _authenticate_with_http(self, email: str, password: str) -> bool:
-        """Authentifizierung über direkte HTTP-Anfragen"""
+        """Authentifizierung über direkte HTTP-Anfragen - NUR echte API"""
         try:
             await self._ensure_session()
             
@@ -176,21 +176,8 @@ class RealMammotionClient:
                     return False
                     
         except Exception as e:
-            self.logger.warning(f"HTTP-Authentifizierung fehlgeschlagen: {e}")
-            
-            # Fallback: Demo-Modus für Entwicklung und Testing
-            if "@" in email and len(password) >= 6:
-                self.logger.info("Verwende Demo-Modus für Entwicklung")
-                self._authenticated = True
-                self._user_info = {
-                    "email": email,
-                    "access_token": "demo_token_" + email.split("@")[0],
-                    "demo_mode": True
-                }
-                return True
-            else:
-                self.logger.error("Ungültige Anmeldedaten")
-                return False
+            self.logger.error(f"HTTP-Authentifizierung fehlgeschlagen: {e}")
+            return False
             
     async def discover_devices(self) -> List[RealMowerInfo]:
         """
@@ -249,7 +236,7 @@ class RealMammotionClient:
             return []
             
     async def _discover_with_http(self) -> List[RealMowerInfo]:
-        """Geräte-Suche über HTTP-API"""
+        """Geräte-Suche über HTTP-API - NUR echte API"""
         try:
             await self._ensure_session()
             
@@ -281,30 +268,9 @@ class RealMammotionClient:
                     raise Exception(f"HTTP {response.status}")
                     
         except Exception as e:
-            self.logger.warning(f"HTTP-Geräte-Suche fehlgeschlagen: {e}")
-            
-            # Fallback: Demo-Geräte für Entwicklung
-            if self._user_info and self._user_info.get("demo_mode"):
-                self.logger.info("Verwende Demo-Geräte für Entwicklung")
-                demo_devices = [
-                    RealMowerInfo(
-                        device_id="demo_mower_001",
-                        name="Demo Luba 2 AWD",
-                        model="Luba 2 AWD",
-                        battery_level=85,
-                        status="Bereit",
-                        position_x=12.3,
-                        position_y=45.6,
-                        firmware_version="2.1.15",
-                        serial_number="DEMO12345",
-                        last_seen=datetime.now()
-                    )
-                ]
-                self._devices = demo_devices
-                self.logger.info(f"{len(demo_devices)} Demo-Geräte erstellt")
-                return demo_devices
-            else:
-                return []
+            self.logger.error(f"HTTP-Geräte-Suche fehlgeschlagen: {e}")
+            # Keine Demo-Geräte, keine Fallbacks - nur echte API
+            return []
             
     async def send_command(self, device_id: str, command: str, parameters: Optional[Dict] = None) -> bool:
         """
@@ -325,33 +291,27 @@ class RealMammotionClient:
         self.logger.info(f"Sende Befehl '{command}' an Gerät {device_id}")
         
         try:
-            if self._mammotion_client and not self._user_info.get("demo_mode"):
+            if self._mammotion_client:
                 # PyMammotion-Befehl
                 result = await self._mammotion_client.send_command(device_id, command, parameters or {})
                 return result.get('success', False)
             else:
-                # HTTP-Befehl oder Demo-Modus
-                if self._user_info and self._user_info.get("demo_mode"):
-                    # Demo-Modus: Simuliere erfolgreiche Befehlsausführung
-                    self.logger.info(f"Demo-Modus: Befehl '{command}' simuliert erfolgreich")
-                    return True
-                else:
-                    # Echter HTTP-Befehl
-                    await self._ensure_session()
-                    
-                    command_data = {
-                        'command': command,
-                        'parameters': parameters or {}
-                    }
-                    
-                    url = f"{self.devices_url}/{device_id}/commands"
-                    async with self._session.post(url, json=command_data) as response:
-                        if response.status == 200:
-                            result = await response.json()
-                            return result.get('success', False)
-                        else:
-                            self.logger.error(f"HTTP-Fehler bei Befehl: {response.status}")
-                            return False
+                # Echter HTTP-Befehl - keine Demo-Simulation
+                await self._ensure_session()
+                
+                command_data = {
+                    'command': command,
+                    'parameters': parameters or {}
+                }
+                
+                url = f"{self.devices_url}/{device_id}/commands"
+                async with self._session.post(url, json=command_data) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return result.get('success', False)
+                    else:
+                        self.logger.error(f"HTTP-Fehler bei Befehl: {response.status}")
+                        return False
                         
         except Exception as e:
             self.logger.error(f"Befehl senden fehlgeschlagen: {e}")

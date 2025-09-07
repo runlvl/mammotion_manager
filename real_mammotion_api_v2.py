@@ -470,28 +470,10 @@ def main():
         async with RealMammotionAPIv2() as api:
             print("=== Teste echte Mammotion-API v2 ===")
             
-            # Test-Authentifizierung
-            success = await api.authenticate("test@example.com", "testpassword")
-            print(f"Authentifizierung: {'✅ Erfolgreich' if success else '❌ Fehlgeschlagen'}")
-            
-            if success:
-                # Test-Geräte abrufen
-                devices = await api.get_devices()
-                print(f"Gefundene Geräte: {len(devices)}")
-                
-                if devices:
-                    device = devices[0]
-                    device_id = device.get('deviceId', 'unknown')
-                    
-                    # Test-Befehle
-                    commands = ['start_mowing', 'stop_mowing', 'return_to_dock']
-                    for cmd in commands:
-                        result = await api.send_command(device_id, cmd)
-                        print(f"Befehl '{cmd}': {'✅ Erfolgreich' if result else '❌ Fehlgeschlagen'}")
-                        
-                    # Test-Status
-                    status = await api.get_device_status(device_id)
-                    print(f"Status-Abruf: {'✅ Erfolgreich' if status else '❌ Fehlgeschlagen'}")
+            # Authentifizierung mit echten Zugangsdaten erforderlich
+            print("Authentifizierung: Echte Mammotion-Zugangsdaten erforderlich")
+            print("Diese Demo-Funktion erfordert echte API-Verbindung")
+            return
                     
     asyncio.run(test_api())
 
