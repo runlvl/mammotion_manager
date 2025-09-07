@@ -1,0 +1,258 @@
+/* Custom styles for Mammotion Web Control */
+
+/* Base styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #171717 0%, #262626 100%);
+    min-height: 100vh;
+}
+
+/* Glass morphism effect */
+.glass {
+    background: rgba(38, 38, 38, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glow effects */
+.glow {
+    box-shadow: 0 0 20px rgba(158, 127, 255, 0.3);
+}
+
+.glow-success {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.glow-error {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.glow-warning {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+/* Custom animations */
+@keyframes pulse-slow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #171717;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #9E7FFF;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #8B5CF6;
+}
+
+/* Form elements */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #9E7FFF;
+    border-color: transparent;
+}
+
+/* Button hover effects */
+.btn-primary {
+    background: linear-gradient(135deg, #9E7FFF 0%, #38bdf8 100%);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(158, 127, 255, 0.4);
+}
+
+.btn-success {
+    background: #10b981;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-error {
+    background: #ef4444;
+    transition: all 0.3s ease;
+}
+
+.btn-error:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: #f59e0b;
+    transition: all 0.3s ease;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading states */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Status indicators */
+.status-online {
+    color: #10b981;
+}
+
+.status-offline {
+    color: #ef4444;
+}
+
+.status-charging {
+    color: #f59e0b;
+}
+
+.status-mowing {
+    color: #38bdf8;
+}
+
+/* Battery indicator */
+.battery-indicator {
+    position: relative;
+    display: inline-block;
+}
+
+.battery-level {
+    transition: all 0.3s ease;
+}
+
+/* Responsive design helpers */
+@media (max-width: 640px) {
+    .glass {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .text-4xl {
+        font-size: 2rem;
+    }
+    
+    .text-3xl {
+        font-size: 1.5rem;
+    }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+    .glass {
+        background: rgba(38, 38, 38, 0.9);
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .glass {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .text-textSecondary {
+        color: #D1D5DB;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .glass {
+        background: white;
+        color: black;
+        border: 1px solid black;
+    }
+    
+    .bg-background {
+        background: white !important;
+    }
+    
+    .text-text {
+        color: black !important;
+    }
+}

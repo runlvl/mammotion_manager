@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Mammotion Web Control{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <header class="glass border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center space-x-4">
+                    <div class="h-10 w-10 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center glow">
+                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-text">Mammotion Control</h1>
+                        <p class="text-sm text-textSecondary">Willkommen, {{ user_email }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                        <span class="text-sm text-textSecondary">Online</span>
+                    </div>
+                    <a href="/logout" class="bg-surface hover:bg-border text-text px-4 py-2 rounded-xl transition-colors duration-200">
+                        Abmelden
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass rounded-3xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-textSecondary">Verbundene Geräte</p>
+                        <p class="text-3xl font-bold text-text" id="deviceCount">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-3xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-textSecondary">Aktive Mäher</p>
+                        <p class="text-3xl font-bold text-text" id="activeMowers">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-success/20 rounded-2xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-3xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-textSecondary">Durchschnittlicher Akku</p>
+                        <p class="text-3xl font-bold text-text" id="avgBattery">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-warning/20 rounded-2xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devices List -->
+        <div class="glass rounded-3xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-text">Ihre Mähroboter</h2>
+                <button 
+                    id="refreshBtn" 
+                    class="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-xl transition-colors duration-200 flex items-center space-x-2"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Aktualisieren</span>
+                </button>
+            </div>
+
+            <div id="devicesList" class="space-y-4">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-textSecondary">Lade Geräte...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Device Control Modal -->
+<div id="deviceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="glass rounded-3xl p-8 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-text" id="modalTitle">Gerät steuern</h3>
+            <button id="closeModal" class="text-textSecondary hover:text-text">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div id="modalContent" class="space-y-4">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+
+        <div class="flex space-x-3 mt-6">
+            <button id="startBtn" class="flex-1 bg-success hover:bg-success/80 text-white py-3 px-4 rounded-xl transition-colors duration-200">
+                Starten
+            </button>
+            <button id="stopBtn" class="flex-1 bg-error hover:bg-error/80 text-white py-3 px-4 rounded-xl transition-colors duration-200">
+                Stoppen
+            </button>
+            <button id="dockBtn" class="flex-1 bg-warning hover:bg-warning/80 text-white py-3 px-4 rounded-xl transition-colors duration-200">
+                Zur Station
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let ws = null;
+let devices = [];
+let currentDevice = null;
+
+// Initialize WebSocket connection
+function initWebSocket() {
+    const clientId = 'dashboard_' + Date.now();
+    ws = new WebSocket(`ws://localhost:8000/ws/${clientId}`);
+    
+    ws.onopen = function(event) {
+        console.log('WebSocket connected');
+        requestDevices();
+    };
+    
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+    };
+    
+    ws.onclose = function(event) {
+        console.log('WebSocket disconnected');
+        setTimeout(initWebSocket, 5000); // Reconnect after 5 seconds
+    };
+    
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
+}
+
+// Handle WebSocket messages
+function handleWebSocketMessage(data) {
+    switch(data.type) {
+        case 'devices':
+            devices = data.data;
+            updateDevicesList();
+            updateStats();
+            break;
+        case 'device_status':
+            updateDeviceStatus(data.device_id, data.data);
+            break;
+        case 'error':
+            showNotification(data.message, 'error');
+            break;
+        case 'heartbeat':
+            // Keep connection alive
+            break;
+    }
+}
+
+// Request devices from server
+function requestDevices() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'get_devices',
+            user_data: {{ user_data | tojson }}
+        }));
+    }
+}
+
+// Update devices list in UI
+function updateDevicesList() {
+    const container = document.getElementById('devicesList');
+    
+    if (devices.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <svg class="w-12 h-12 text-textSecondary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-textSecondary">Keine Geräte gefunden</p>
+                <p class="text-sm text-textSecondary mt-2">Stellen Sie sicher, dass Ihre Mähroboter online sind</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = devices.map(device => `
+        <div class="bg-surface rounded-2xl p-6 hover:bg-border transition-colors duration-200 cursor-pointer" onclick="openDeviceModal('${device.id}')">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-text">${device.name}</h3>
+                        <p class="text-sm text-textSecondary">${device.model}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 rounded-full ${device.online ? 'bg-success' : 'bg-error'}"></div>
+                            <span class="text-sm text-textSecondary">${device.online ? 'Online' : 'Offline'}</span>
+                        </div>
+                        <p class="text-sm text-textSecondary mt-1">Akku: ${device.battery}%</p>
+                    </div>
+                    <div class="w-16 h-16 relative">
+                        <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-border" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                            <path class="text-success" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="${device.battery}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xs font-semibold text-text">${device.battery}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update statistics
+function updateStats() {
+    document.getElementById('deviceCount').textContent = devices.length;
+    document.getElementById('activeMowers').textContent = devices.filter(d => d.status === 'mowing').length;
+    
+    const avgBattery = devices.length > 0 
+        ? Math.round(devices.reduce((sum, d) => sum + d.battery, 0) / devices.length)
+        : 0;
+    document.getElementById('avgBattery').textContent = avgBattery + '%';
+}
+
+// Open device control modal
+function openDeviceModal(deviceId) {
+    currentDevice = devices.find(d => d.id === deviceId);
+    if (!currentDevice) return;
+    
+    document.getElementById('modalTitle').textContent = currentDevice.name;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-background rounded-xl p-4">
+                    <p class="text-sm text-textSecondary">Status</p>
+                    <p class="font-semibold text-text">${currentDevice.status}</p>
+                </div>
+                <div class="bg-background rounded-xl p-4">
+                    <p class="text-sm text-textSecondary">Akku</p>
+                    <p class="font-semibold text-text">${currentDevice.battery}%</p>
+                </div>
+            </div>
+            <div class="bg-background rounded-xl p-4">
+                <p class="text-sm text-textSecondary">Modell</p>
+                <p class="font-semibold text-text">${currentDevice.model}</p>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('deviceModal').classList.remove('hidden');
+    document.getElementById('deviceModal').classList.add('flex');
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById('deviceModal').classList.add('hidden');
+    document.getElementById('deviceModal').classList.remove('flex');
+    currentDevice = null;
+}
+
+// Send device command
+async function sendCommand(command) {
+    if (!currentDevice) return;
+    
+    try {
+        const response = await fetch(`/api/devices/${currentDevice.id}/${command}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(result.message || `Befehl "${command}" gesendet`, 'success');
+            closeModal();
+            requestDevices(); // Refresh devices
+        } else {
+            showNotification('Befehl fehlgeschlagen', 'error');
+        }
+    } catch (error) {
+        console.error('Command error:', error);
+        showNotification('Verbindungsfehler', 'error');
+    }
+}
+
+// Event listeners
+document.getElementById('refreshBtn').addEventListener('click', requestDevices);
+document.getElementById('closeModal').addEventListener('click', closeModal);
+document.getElementById('startBtn').addEventListener('click', () => sendCommand('start'));
+document.getElementById('stopBtn').addEventListener('click', () => sendCommand('stop'));
+document.getElementById('dockBtn').addEventListener('click', () => sendCommand('dock'));
+
+// Close modal on outside click
+document.getElementById('deviceModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initWebSocket();
+});
+</script>
+{% endblock %}

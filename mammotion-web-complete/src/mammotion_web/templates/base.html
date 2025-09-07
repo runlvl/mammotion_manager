@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mammotion Web Control{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#9E7FFF',
+                        secondary: '#38bdf8',
+                        accent: '#f472b6',
+                        background: '#171717',
+                        surface: '#262626',
+                        text: '#FFFFFF',
+                        textSecondary: '#A3A3A3',
+                        border: '#2F2F2F',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239E7FFF'><path d='M13 10V3L4 14h7v7l9-11h-7z'/></svg>">
+</head>
+<body class="h-full bg-background text-text">
+    {% block content %}{% endblock %}
+    
+    <!-- Base JavaScript -->
+    <script>
+        // Global utility functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-2xl text-white font-medium transform transition-all duration-300 translate-x-full`;
+            
+            switch(type) {
+                case 'success':
+                    notification.className += ' bg-success glow-success';
+                    break;
+                case 'error':
+                    notification.className += ' bg-error glow-error';
+                    break;
+                case 'warning':
+                    notification.className += ' bg-warning glow-warning';
+                    break;
+                default:
+                    notification.className += ' bg-primary glow';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 5000);
+        }
+        
+        function setLoading(element, loading) {
+            if (loading) {
+                element.disabled = true;
+                element.classList.add('loading');
+                element.dataset.originalText = element.textContent;
+                element.textContent = 'Loading...';
+            } else {
+                element.disabled = false;
+                element.classList.remove('loading');
+                element.textContent = element.dataset.originalText || element.textContent;
+            }
+        }
+        
+        // Handle form submissions with proper error handling
+        function handleFormSubmit(form, button) {
+            const formData = new FormData(form);
+            
+            setLoading(button, true);
+            
+            fetch(form.action, {
+                method: form.method,
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                return response.text();
+            })
+            .then(html => {
+                if (html) {
+                    // If we get HTML back, it means there was an error
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const errorElement = doc.querySelector('.bg-error\\/10');
+                    if (errorElement) {
+                        showNotification(errorElement.textContent.trim(), 'error');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                showNotification('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.', 'error');
+            })
+            .finally(() => {
+                setLoading(button, false);
+            });
+        }
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

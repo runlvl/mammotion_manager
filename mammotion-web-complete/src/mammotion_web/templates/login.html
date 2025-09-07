@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Mammotion Web Control{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto h-20 w-20 bg-gradient-to-br from-primary to-secondary rounded-3xl flex items-center justify-center mb-8 glow animate-pulse-slow">
+                <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <h2 class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Mammotion Control
+            </h2>
+            <p class="mt-4 text-lg text-textSecondary">
+                Melden Sie sich mit Ihren Mammotion-Zugangsdaten an
+            </p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="glass rounded-3xl p-8 space-y-6">
+            {% if error %}
+            <div class="bg-error/10 border border-error/20 text-error px-4 py-3 rounded-2xl text-sm">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form id="loginForm" method="post" action="/login" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-text mb-2">
+                        E-Mail-Adresse
+                    </label>
+                    <input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        required 
+                        value="{{ email or '' }}"
+                        class="w-full px-4 py-4 bg-surface border border-border rounded-2xl text-text placeholder-textSecondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                        placeholder="ihre@email.com"
+                    >
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-text mb-2">
+                        Passwort
+                    </label>
+                    <input 
+                        id="password" 
+                        name="password" 
+                        type="password" 
+                        required
+                        class="w-full px-4 py-4 bg-surface border border-border rounded-2xl text-text placeholder-textSecondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                        placeholder="••••••••"
+                    >
+                </div>
+
+                <button 
+                    type="submit" 
+                    id="loginBtn"
+                    class="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:shadow-lg hover:shadow-primary/25 transform hover:scale-[1.02] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                >
+                    Anmelden
+                </button>
+            </form>
+
+            <!-- Info -->
+            <div class="text-center pt-4 border-t border-border">
+                <p class="text-sm text-textSecondary">
+                    Verwenden Sie Ihre echten Mammotion-Zugangsdaten
+                </p>
+                <p class="text-xs text-textSecondary mt-2">
+                    Ihre Daten werden sicher übertragen und nicht gespeichert
+                </p>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+            <div class="text-center p-4 glass rounded-2xl">
+                <div class="w-8 h-8 bg-success/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-xs text-textSecondary">Sichere Verbindung</p>
+            </div>
+            <div class="text-center p-4 glass rounded-2xl">
+                <div class="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <p class="text-xs text-textSecondary">Echtzeit-Steuerung</p>
+            </div>
+            <div class="text-center p-4 glass rounded-2xl">
+                <div class="w-8 h-8 bg-secondary/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <svg class="w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <p class="text-xs text-textSecondary">Mobile Optimiert</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const button = document.getElementById('loginBtn');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = form.querySelector('#email').value;
+        const password = form.querySelector('#password').value;
+        
+        if (!email || !password) {
+            showNotification('Bitte füllen Sie alle Felder aus', 'error');
+            return;
+        }
+        
+        // Use the global form handler
+        handleFormSubmit(form, button);
+    });
+});
+</script>
+{% endblock %}

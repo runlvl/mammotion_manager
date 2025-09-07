@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Mammotion Web Control{% endblock %}
+
+{% block extra_head %}
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.device-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.device-card:hover {
+    transform: translateY(-5px);
+}
+
+.device-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.device-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.device-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-idle {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.status-working {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.status-charging {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.device-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.info-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.device-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    flex: 1;
+    min-width: 80px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px 0;
+}
+
+.user-info {
+    color: #666;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 8px;
+    color: #059669;
+    font-size: 0.9rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="navbar">
+        <div class="header" style="margin-bottom: 0; text-align: left;">
+            <h1 style="font-size: 2rem;">🤖 Mammotion Dashboard</h1>
+            <p>Willkommen zurück, {{ user }}</p>
+        </div>
+        <div class="user-info">
+            <a href="/auth/logout" class="btn btn-secondary">Abmelden</a>
+        </div>
+    </div>
+    
+    <div class="connection-status" id="connectionStatus">
+        <div class="status-dot"></div>
+        <span>Verbunden - Live-Updates aktiv</span>
+    </div>
+    
+    <div class="dashboard-grid" id="devicesGrid">
+        <!-- Devices will be loaded here -->
+        <div class="device-card">
+            <div class="device-header">
+                <div class="device-name">Mammotion Luba 2</div>
+                <div class="device-status status-idle">Bereit</div>
+            </div>
+            
+            <div class="device-info">
+                <div class="info-item">
+                    <div class="info-value">85%</div>
+                    <div class="info-label">Akku</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">12.5m</div>
+                    <div class="info-label">Position X</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">8.3m</div>
+                    <div class="info-label">Position Y</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">10:30</div>
+                    <div class="info-label">Letzter Kontakt</div>
+                </div>
+            </div>
+            
+            <div class="device-controls">
+                <button class="btn btn-small" onclick="controlDevice('mower_001', 'start')">
+                    ▶️ Starten
+                </button>
+                <button class="btn btn-small btn-secondary" onclick="controlDevice('mower_001', 'stop')">
+                    ⏹️ Stoppen
+                </button>
+                <button class="btn btn-small" onclick="controlDevice('mower_001', 'dock')">
+                    🏠 Zur Station
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let ws = null;
+
+// Initialize WebSocket connection
+function initWebSocket() {
+    const
