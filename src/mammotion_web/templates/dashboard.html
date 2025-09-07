@@ -164,18 +164,45 @@ document.getElementById('discover-btn').addEventListener('click', function() {
     `;
     btn.disabled = true;
     
-    // Simulate device discovery
-    setTimeout(() => {
+    // Real device discovery - connect to actual API endpoint
+    fetch('/api/devices/discover', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
         btn.innerHTML = originalText;
         btn.disabled = false;
         
-        // TODO: Implement real device discovery
+        if (!response.ok) {
+            throw new Error('Geräte-Erkennung fehlgeschlagen');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Display real device list
+        if (data.devices && data.devices.length > 0) {
+            // Real device discovery results
+            updateDeviceList(data.devices);
+        } else {
+            document.getElementById('devices-list').innerHTML = `
+                <div class="text-center py-8 text-textSecondary">
+                    <p>Keine Mammotion-Geräte gefunden</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
         document.getElementById('devices-list').innerHTML = `
-            <div class="text-center py-8 text-textSecondary">
-                <p>Geräte-Erkennung implementiert nach Mammotion API-Integration</p>
+            <div class="text-center py-8 text-red-500">
+                <p>Fehler: ${error.message}</p>
+                <p class="text-sm mt-2">Echte Mammotion-API erforderlich</p>
             </div>
         `;
-    }, 2000);
+    });
 });
 </script>
 {% endblock %}
