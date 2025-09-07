@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h1>Anmeldung</h1>
+  <p>Melden Sie sich mit Ihren Mammotion-Zugangsdaten an.</p>
+  <form id="loginForm" onsubmit="return login(event)">
+    <label>E-Mail<br /><input type="email" name="email" required /></label>
+    <label>Passwort<br /><input type="password" name="password" required /></label>
+    <button type="submit">Anmelden</button>
+  </form>
+  <div id="loginError" class="error" style="display:none;"></div>
+</section>
+<script>
+async function login(e){
+  e.preventDefault();
+  const form = document.getElementById('loginForm');
+  const data = Object.fromEntries(new FormData(form));
+  const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+  if (res.ok){ window.location.href = '/'; return false; }
+  const j = await res.json().catch(()=>({detail:'Unbekannter Fehler'}));
+  const el = document.getElementById('loginError');
+  el.textContent = j.detail || 'Fehler bei der Anmeldung';
+  el.style.display='block';
+  return false;
+}
+</script>
+{% endblock %}

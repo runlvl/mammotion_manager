@@ -1,0 +1,11 @@
+.app-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#0c6d3e;color:#fff}.app-header .brand{font-weight:800;letter-spacing:.5px}.app-header a,.app-header .linklike{color:#fff;text-decoration:none;margin-left:12px;background:transparent;border:none;cursor:pointer}
+.container{padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{display:block;padding:16px;border:1px solid #e1e5e9;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.card h2{margin:0 0 8px 0}
+label{display:block;margin:8px 0}
+input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+button{padding:10px 16px;border-radius:8px;border:none;background:#198754;color:#fff;cursor:pointer}
+button:hover{background:#157347}
+.error{color:#b42318;background:#fee4e2;border:1px solid #fecdca;padding:8px;border-radius:8px;margin-top:8px}
+.controls button{margin-right:8px}

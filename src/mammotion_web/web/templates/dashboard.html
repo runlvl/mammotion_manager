@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="grid">
+  {% for d in devices %}
+  <a class="card" href="/devices/{{ d.id }}">
+    <h2>{{ d.name }}</h2>
+    <div>Modell: {{ d.model or '—' }}</div>
+    <div>Akku: {{ d.battery_level if d.battery_level is not none else '—' }}{% if d.battery_level is not none %}%{% endif %}</div>
+    <div>Status: {{ d.status or '—' }}</div>
+    <div>Online: {{ 'Ja' if d.online else 'Nein' }}</div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

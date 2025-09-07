@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card">
+  <h1>Gerät {{ device_id }}</h1>
+  <div id="status">
+    <div>Status: <strong id="st">{{ status.status or '—' }}</strong></div>
+    <div>Akku: <strong id="bat">{{ status.battery_level if status.battery_level is not none else '—' }}</strong></div>
+    <div>Position: <strong id="pos">{% if status.position %}{{ status.position.lat }}, {{ status.position.lon }}{% else %}—{% endif %}</strong></div>
+  </div>
+  <div class="controls">
+    <button onclick="cmd('start')">Start</button>
+    <button onclick="cmd('pause')">Pause</button>
+    <button onclick="cmd('resume')">Weiter</button>
+    <button onclick="cmd('stop')">Stopp</button>
+    <button onclick="cmd('return')">Zur Ladestation</button>
+  </div>
+</section>
+<script>
+const deviceId = {{ device_id|tojson }};
+let ws;
+function connectWs(){
+  ws = new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+`/ws/device/${deviceId}`);
+  ws.onmessage = (ev)=>{
+    try{
+      const m = JSON.parse(ev.data);
+      if(m.type==='status' || m.type==='update'){
+        const s = m.data;
+        if(s.status!==undefined) document.getElementById('st').textContent = s.status;
+        if(s.battery_level!==undefined) document.getElementById('bat').textContent = (s.battery_level??'—');
+        if(s.position) document.getElementById('pos').textContent = `${s.position.lat}, ${s.position.lon}`;
+      }
+    }catch(e){}
+  };
+  ws.onclose = ()=> setTimeout(connectWs, 1500);
+}
+connectWs();
+
+async function cmd(action){
+  await fetch(`/api/devices/${deviceId}/command`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action})});
+}
+</script>
+{% endblock %}

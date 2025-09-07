@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Mammotion Web Control{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <div class="mx-auto h-20 w-20 rounded-full gradient-bg flex items-center justify-center mb-6">
+                <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-text">Mammotion Web Control</h2>
+            <p class="mt-2 text-textSecondary">Melden Sie sich mit Ihren Mammotion-Zugangsdaten an</p>
+        </div>
+        
+        <form class="mt-8 space-y-6" action="/auth/login" method="post">
+            <div class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-text mb-2">
+                        Benutzername oder E-Mail
+                    </label>
+                    <input 
+                        id="username" 
+                        name="username" 
+                        type="text" 
+                        required 
+                        class="w-full px-4 py-3 bg-surface border border-border rounded-2xl text-text placeholder-textSecondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                        placeholder="Ihre Mammotion E-Mail"
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-text mb-2">
+                        Passwort
+                    </label>
+                    <input 
+                        id="password" 
+                        name="password" 
+                        type="password" 
+                        required 
+                        class="w-full px-4 py-3 bg-surface border border-border rounded-2xl text-text placeholder-textSecondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                        placeholder="Ihr Passwort"
+                    >
+                </div>
+            </div>
+            
+            <div>
+                <button 
+                    type="submit" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-2xl text-white font-medium gradient-bg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:scale-105"
+                >
+                    <span class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        Anmelden
+                    </span>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <p class="text-sm text-textSecondary">
+                    Verwenden Sie Ihre Mammotion App-Zugangsdaten
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

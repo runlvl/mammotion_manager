@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-neutral-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mammotion Web Control{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#9E7FFF',
+                        secondary: '#38bdf8',
+                        accent: '#f472b6',
+                        background: '#171717',
+                        surface: '#262626',
+                        text: '#FFFFFF',
+                        textSecondary: '#A3A3A3',
+                        border: '#2F2F2F',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #9E7FFF 0%, #38bdf8 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(38, 38, 38, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="h-full bg-background text-text">
+    <div class="min-h-full">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script>
+        // WebSocket connection for real-time updates
+        let ws = null;
+        
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function(event) {
+                console.log('WebSocket connected');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message:', data);
+                // Handle real-time updates here
+            };
+            
+            ws.onclose = function(event) {
+                console.log('WebSocket disconnected');
+                // Reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        // Connect on page load
+        document.addEventListener('DOMContentLoaded', connectWebSocket);
+    </script>
+</body>
+</html>

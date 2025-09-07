@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Mammotion Web Control{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Navigation -->
+    <nav class="glass-effect border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="h-8 w-8 rounded-lg gradient-bg flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-text">Mammotion Control</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-textSecondary">
+                        Willkommen, {{ request.session.get('username', 'Benutzer') }}
+                    </div>
+                    <form action="/auth/logout" method="post" class="inline">
+                        <button type="submit" class="text-textSecondary hover:text-text transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-effect rounded-2xl p-6">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 rounded-xl bg-success/20 flex items-center justify-center">
+                            <svg class="h-6 w-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-textSecondary">Status</p>
+                            <p class="text-2xl font-bold text-success">Online</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-2xl p-6">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                            <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-textSecondary">Geräte</p>
+                            <p class="text-2xl font-bold text-text">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-2xl p-6">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 rounded-xl bg-secondary/20 flex items-center justify-center">
+                            <svg class="h-6 w-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-textSecondary">Aktiv</p>
+                            <p class="text-2xl font-bold text-text">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Device Discovery -->
+            <div class="glass-effect rounded-2xl p-6 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-text">Geräte-Erkennung</h2>
+                    <button 
+                        id="discover-btn"
+                        class="px-4 py-2 gradient-bg text-white rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-105"
+                    >
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            Suchen
+                        </span>
+                    </button>
+                </div>
+                
+                <div id="devices-list" class="space-y-4">
+                    <div class="text-center py-8 text-textSecondary">
+                        <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <p>Keine Geräte gefunden</p>
+                        <p class="text-sm mt-2">Klicken Sie auf "Suchen", um nach Mammotion-Geräten zu suchen</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="glass-effect rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-text mb-6">Schnellaktionen</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="p-4 bg-surface hover:bg-border rounded-xl transition-colors text-center">
+                        <svg class="mx-auto h-8 w-8 text-success mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-10V3a1 1 0 011-1h1a1 1 0 011 1v1M5 7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-text">Alle starten</span>
+                    </button>
+                    
+                    <button class="p-4 bg-surface hover:bg-border rounded-xl transition-colors text-center">
+                        <svg class="mx-auto h-8 w-8 text-error mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6m-6 4h6"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-text">Alle stoppen</span>
+                    </button>
+                    
+                    <button class="p-4 bg-surface hover:bg-border rounded-xl transition-colors text-center">
+                        <svg class="mx-auto h-8 w-8 text-warning mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-text">Zur Basis</span>
+                    </button>
+                    
+                    <button class="p-4 bg-surface hover:bg-border rounded-xl transition-colors text-center">
+                        <svg class="mx-auto h-8 w-8 text-secondary mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-text">Aktualisieren</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+document.getElementById('discover-btn').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    // Show loading state
+    btn.innerHTML = `
+        <span class="flex items-center">
+            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Suche läuft...
+        </span>
+    `;
+    btn.disabled = true;
+    
+    // Simulate device discovery
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // TODO: Implement real device discovery
+        document.getElementById('devices-list').innerHTML = `
+            <div class="text-center py-8 text-textSecondary">
+                <p>Geräte-Erkennung implementiert nach Mammotion API-Integration</p>
+            </div>
+        `;
+    }, 2000);
+});
+</script>
+{% endblock %}
