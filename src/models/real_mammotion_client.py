@@ -15,17 +15,13 @@ import json
 
 # Versuche PyMammotion zu importieren
 try:
-    from pymammotion import MammotionHTTP
-    # HashResponse import ist optional
-    try:
-        from pymammotion.data.model import HashResponse
-    except ImportError:
-        HashResponse = None
+    # Import the improved PyMammotion client
+    from ..mammotion_web.api.pymammotion_client import PyMammotionClient, PyMammotionNotAvailable
     PYMAMMOTION_AVAILABLE = True
 except ImportError as e:
     PYMAMMOTION_AVAILABLE = False
-    MammotionHTTP = None
-    HashResponse = None
+    PyMammotionClient = None
+    PyMammotionNotAvailable = None
     logging.warning(f"PyMammotion nicht verfügbar: {e}")
 
 
@@ -64,7 +60,7 @@ class RealMammotionClient:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self._session: Optional[aiohttp.ClientSession] = None
-        self._mammotion_client: Optional[MammotionHTTP] = None
+        self._pymammotion_client: Optional[PyMammotionClient] = None
         self._authenticated = False
         self._user_info: Optional[Dict[str, Any]] = None
         self._devices: List[RealMowerInfo] = []
@@ -125,19 +121,30 @@ class RealMammotionClient:
     async def _authenticate_with_pymammotion(self, email: str, password: str) -> bool:
         """Authentifizierung über PyMammotion-Bibliothek"""
         try:
-            self._mammotion_client = MammotionHTTP()
+            self.logger.info("Initialisiere PyMammotion-Client...")
+            self._pymammotion_client = PyMammotionClient()
             
-            # Login-Versuch
-            auth_result = await self._mammotion_client.login(email, password)
+            # Login-Versuch mit verbessertem Error Handling
+            await self._pymammotion_client.login(email, password)
             
-            if auth_result and hasattr(auth_result, 'access_token'):
+            if self._pymammotion_client.is_authenticated:
                 self._authenticated = True
                 self.logger.info("Erfolgreich bei Mammotion angemeldet (PyMammotion)")
-                return True
+                
+                # Teste Verbindung mit Health Check
+                if await self._pymammotion_client.health_check():
+                    self.logger.info("PyMammotion Health Check erfolgreich")
+                    return True
+                else:
+                    self.logger.warning("PyMammotion Health Check fehlgeschlagen")
+                    return False
             else:
                 self.logger.error("Anmeldung bei Mammotion fehlgeschlagen")
                 return False
                 
+        except PyMammotionNotAvailable as e:
+            self.logger.warning(f"PyMammotion nicht verfügbar: {e}")
+            return False
         except Exception as e:
             self.logger.error(f"PyMammotion-Authentifizierung fehlgeschlagen: {e}")
             return False
@@ -193,7 +200,7 @@ class RealMammotionClient:
         self.logger.info("Suche nach Mammotion-Geräten...")
         
         # Versuche zuerst PyMammotion, dann HTTP-Fallback
-        if self._mammotion_client:
+        if self._pymammotion_client:
             try:
                 devices = await self._discover_with_pymammotion()
                 if devices:
@@ -209,20 +216,21 @@ class RealMammotionClient:
     async def _discover_with_pymammotion(self) -> List[RealMowerInfo]:
         """Geräte-Suche über PyMammotion"""
         try:
-            devices_data = await self._mammotion_client.get_devices()
+            self.logger.info("Suche Geräte mit PyMammotion...")
+            devices_data = await self._pymammotion_client.list_devices()
             
             devices = []
             for device_info in devices_data:
                 mower = RealMowerInfo(
-                    device_id=device_info.get('device_id', 'unknown'),
+                    device_id=device_info.get('id', 'unknown'),
                     name=device_info.get('name', 'Mammotion Mäher'),
                     model=device_info.get('model', 'Luba'),
                     battery_level=device_info.get('battery_level', 0),
                     status=device_info.get('status', 'unknown'),
-                    position_x=device_info.get('position_x', 0.0),
-                    position_y=device_info.get('position_y', 0.0),
+                    position_x=device_info.get('position', {}).get('lat', 0.0),
+                    position_y=device_info.get('position', {}).get('lon', 0.0),
                     firmware_version=device_info.get('firmware_version', 'Unknown'),
-                    serial_number=device_info.get('serial_number', 'Unknown'),
+                    serial_number=device_info.get('serial_number', device_info.get('id', 'Unknown')),
                     last_seen=datetime.now()
                 )
                 devices.append(mower)
@@ -291,10 +299,10 @@ class RealMammotionClient:
         self.logger.info(f"Sende Befehl '{command}' an Gerät {device_id}")
         
         try:
-            if self._mammotion_client:
+            if self._pymammotion_client:
                 # PyMammotion-Befehl
-                result = await self._mammotion_client.send_command(device_id, command, parameters or {})
-                return result.get('success', False)
+                await self._pymammotion_client.send_command(device_id, command, parameters)
+                return True
             else:
                 # Echter HTTP-Befehl - keine Demo-Simulation
                 await self._ensure_session()
@@ -331,9 +339,9 @@ class RealMammotionClient:
             return None
             
         try:
-            if self._mammotion_client:
+            if self._pymammotion_client:
                 # PyMammotion-Status
-                status_data = await self._mammotion_client.get_device_status(device_id)
+                status_data = await self._pymammotion_client.get_status(device_id)
                 
                 return RealMowerInfo(
                     device_id=device_id,
@@ -341,8 +349,8 @@ class RealMammotionClient:
                     model=status_data.get('model', 'Luba'),
                     battery_level=status_data.get('battery_level', 0),
                     status=status_data.get('status', 'unknown'),
-                    position_x=status_data.get('position_x', 0.0),
-                    position_y=status_data.get('position_y', 0.0),
+                    position_x=status_data.get('position', {}).get('lat', 0.0),
+                    position_y=status_data.get('position', {}).get('lon', 0.0),
                     firmware_version=status_data.get('firmware_version', 'Unknown'),
                     serial_number=status_data.get('serial_number', 'Unknown'),
                     last_seen=datetime.now()
@@ -381,11 +389,13 @@ class RealMammotionClient:
             await self._session.close()
             self._session = None
             
-        if self._mammotion_client:
+        if self._pymammotion_client:
             # PyMammotion-Client schließen falls möglich
-            if hasattr(self._mammotion_client, 'close'):
-                await self._mammotion_client.close()
-            self._mammotion_client = None
+            try:
+                await self._pymammotion_client.close()
+            except Exception as e:
+                self.logger.warning(f"Fehler beim Schließen des PyMammotion-Clients: {e}")
+            self._pymammotion_client = None
             
         self._authenticated = False
         self.logger.info("Mammotion-Client geschlossen")
