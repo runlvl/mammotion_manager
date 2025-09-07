@@ -68,41 +68,66 @@ class MammotionWebApp:
         self.logger.info(f"Login-Versuch für {email}")
         
         try:
-            # Async Login in separatem Thread ausführen
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # Verwende einen Thread-Pool für async Operationen um Event-Loop-Konflikte zu vermeiden
+            import concurrent.futures
+            import threading
             
-            async def do_login():
-                async with self.mammotion_client as client:
-                    # Authentifizierung
-                    success = await client.authenticate(email, password)
+            def run_async_login():
+                """Führt das async Login in einem separaten Thread aus"""
+                try:
+                    # Neuen Event Loop für diesen Thread erstellen
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
                     
-                    if success:
-                        # Mäher suchen
-                        mowers = await client.discover_devices()
-                        self.current_mowers = mowers
-                        
-                        # GUI mit Mäher-Daten aktualisieren
-                        if mowers:
-                            mower_data = {
-                                'status': mowers[0].status,
-                                'battery_level': mowers[0].battery_level,
-                                'position': f"{mowers[0].position_x:.1f}, {mowers[0].position_y:.1f}",
-                                'model': mowers[0].model,
-                                'name': mowers[0].name
-                            }
-                            self.web_gui.update_mower_data(mower_data)
-                        
-                        self.logger.info(f"Login erfolgreich - {len(mowers)} Mäher gefunden")
-                        return True
-                    else:
-                        self.logger.error("Login fehlgeschlagen")
-                        return False
-                        
-            result = loop.run_until_complete(do_login())
-            loop.close()
-            return result
+                    async def do_login():
+                        async with self.mammotion_client as client:
+                            # Authentifizierung
+                            success = await client.authenticate(email, password)
+                            
+                            if success:
+                                # Mäher suchen
+                                mowers = await client.discover_devices()
+                                self.current_mowers = mowers
+                                
+                                # GUI mit Mäher-Daten aktualisieren
+                                if mowers:
+                                    mower_data = {
+                                        'status': mowers[0].status,
+                                        'battery_level': mowers[0].battery_level,
+                                        'position': f"{mowers[0].position_x:.1f}, {mowers[0].position_y:.1f}",
+                                        'model': mowers[0].model,
+                                        'name': mowers[0].name
+                                    }
+                                    self.web_gui.update_mower_data(mower_data)
+                                
+                                self.logger.info(f"Login erfolgreich - {len(mowers)} Mäher gefunden")
+                                return True
+                            else:
+                                self.logger.error("Login fehlgeschlagen")
+                                return False
+                    
+                    result = loop.run_until_complete(do_login())
+                    return result
+                    
+                except Exception as e:
+                    self.logger.error(f"Async Login-Fehler: {e}")
+                    return False
+                finally:
+                    try:
+                        loop.close()
+                    except:
+                        pass
             
+            # Login in Thread-Pool ausführen mit Timeout
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(run_async_login)
+                # 30 Sekunden Timeout für Login
+                result = future.result(timeout=30)
+                return result
+            
+        except concurrent.futures.TimeoutError:
+            self.logger.error("Login-Timeout nach 30 Sekunden")
+            return False
         except Exception as e:
             self.logger.error(f"Login-Fehler: {e}")
             return False
@@ -121,25 +146,49 @@ class MammotionWebApp:
         self.logger.info(f"Befehl '{command}' für Gerät {device_id}")
         
         try:
-            # Async Command in separatem Thread ausführen
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # Verwende einen Thread-Pool für async Operationen
+            import concurrent.futures
             
-            async def do_command():
-                async with self.mammotion_client as client:
-                    # Befehl senden
-                    success = await client.send_command(device_id, command)
+            def run_async_command():
+                """Führt das async Command in einem separaten Thread aus"""
+                try:
+                    # Neuen Event Loop für diesen Thread erstellen
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
                     
-                    if success:
-                        # Status aktualisieren
-                        await self._update_status()
-                        
-                    return success
+                    async def do_command():
+                        async with self.mammotion_client as client:
+                            # Befehl senden
+                            success = await client.send_command(device_id, command)
+                            
+                            if success:
+                                # Status aktualisieren
+                                await self._update_status()
+                                
+                            return success
                     
-            result = loop.run_until_complete(do_command())
-            loop.close()
-            return result
+                    result = loop.run_until_complete(do_command())
+                    return result
+                    
+                except Exception as e:
+                    self.logger.error(f"Async Command-Fehler: {e}")
+                    return False
+                finally:
+                    try:
+                        loop.close()
+                    except:
+                        pass
             
+            # Command in Thread-Pool ausführen mit Timeout
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(run_async_command)
+                # 15 Sekunden Timeout für Befehle
+                result = future.result(timeout=15)
+                return result
+                
+        except concurrent.futures.TimeoutError:
+            self.logger.error("Command-Timeout nach 15 Sekunden")
+            return False
         except Exception as e:
             self.logger.error(f"Command-Fehler: {e}")
             return False
