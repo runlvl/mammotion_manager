@@ -38,6 +38,7 @@ class MammotionWebApp:
         # Status
         self.is_running = False
         self.current_mowers = []
+        self.authenticated_client: Optional[RealMammotionClient] = None
         
     async def initialize(self):
         """Initialisiert die Anwendung"""
@@ -67,6 +68,10 @@ class MammotionWebApp:
         """
         self.logger.info(f"Login-Versuch für {email}")
         
+        # Credentials für spätere Verwendung speichern
+        self.last_email = email
+        self.last_password = password
+        
         try:
             # Verwende einen Thread-Pool für async Operationen um Event-Loop-Konflikte zu vermeiden
             import concurrent.futures
@@ -88,6 +93,9 @@ class MammotionWebApp:
                                 # Mäher suchen
                                 mowers = await client.discover_devices()
                                 self.current_mowers = mowers
+                                
+                                # Authenticated client für Commands speichern
+                                self.authenticated_client = self.mammotion_client
                                 
                                 # GUI mit Mäher-Daten aktualisieren
                                 if mowers:
@@ -157,15 +165,16 @@ class MammotionWebApp:
                     asyncio.set_event_loop(loop)
                     
                     async def do_command():
-                        async with self.mammotion_client as client:
-                            # Befehl senden
-                            success = await client.send_command(device_id, command)
-                            
-                            if success:
-                                # Status aktualisieren
-                                await self._update_status()
-                                
-                            return success
+                        # Neuen Client für Command verwenden (bereits authentifiziert im Demo-Modus)
+                        client = RealMammotionClient()
+                        
+                        # Demo-Credentials verwenden falls verfügbar
+                        if hasattr(self, 'last_email') and hasattr(self, 'last_password'):
+                            auth_success = await client.authenticate(self.last_email, self.last_password)
+                            if auth_success:
+                                return await client.send_command(device_id, command)
+                        
+                        return False
                     
                     result = loop.run_until_complete(do_command())
                     return result

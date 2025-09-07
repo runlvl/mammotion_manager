@@ -325,27 +325,33 @@ class RealMammotionClient:
         self.logger.info(f"Sende Befehl '{command}' an Gerät {device_id}")
         
         try:
-            if self._mammotion_client:
+            if self._mammotion_client and not self._user_info.get("demo_mode"):
                 # PyMammotion-Befehl
                 result = await self._mammotion_client.send_command(device_id, command, parameters or {})
                 return result.get('success', False)
             else:
-                # HTTP-Befehl
-                await self._ensure_session()
-                
-                command_data = {
-                    'command': command,
-                    'parameters': parameters or {}
-                }
-                
-                url = f"{self.devices_url}/{device_id}/commands"
-                async with self._session.post(url, json=command_data) as response:
-                    if response.status == 200:
-                        result = await response.json()
-                        return result.get('success', False)
-                    else:
-                        self.logger.error(f"HTTP-Fehler bei Befehl: {response.status}")
-                        return False
+                # HTTP-Befehl oder Demo-Modus
+                if self._user_info and self._user_info.get("demo_mode"):
+                    # Demo-Modus: Simuliere erfolgreiche Befehlsausführung
+                    self.logger.info(f"Demo-Modus: Befehl '{command}' simuliert erfolgreich")
+                    return True
+                else:
+                    # Echter HTTP-Befehl
+                    await self._ensure_session()
+                    
+                    command_data = {
+                        'command': command,
+                        'parameters': parameters or {}
+                    }
+                    
+                    url = f"{self.devices_url}/{device_id}/commands"
+                    async with self._session.post(url, json=command_data) as response:
+                        if response.status == 200:
+                            result = await response.json()
+                            return result.get('success', False)
+                        else:
+                            self.logger.error(f"HTTP-Fehler bei Befehl: {response.status}")
+                            return False
                         
         except Exception as e:
             self.logger.error(f"Befehl senden fehlgeschlagen: {e}")
