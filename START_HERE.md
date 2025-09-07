@@ -18,13 +18,10 @@ python3 web_gui_real_api_final.py
 
 ## 🔐 LOGIN
 
-### Mit echten Mammotion-Zugangsdaten:
-- Geben Sie Ihre **echten** E-Mail und Passwort ein
-- App verbindet sich mit echten Mammotion-Servern
-
-### Demo-Modus (falls Server nicht erreichbar):
-- E-Mail: `test@mammotion.com`
-- Passwort: `testpassword`
+### Mammotion-Zugangsdaten erforderlich:
+- Geben Sie Ihre **echten** Mammotion E-Mail und Passwort ein
+- App verbindet sich ausschließlich mit echten Mammotion-Servern
+- **Keine Demo-Modi oder Fallbacks verfügbar**
 
 ## 🎮 FUNKTIONEN
 
@@ -40,9 +37,10 @@ python3 web_gui_real_api_final.py
 - `api.mammotion.com` (Mammotion-Cloud)
 - Regionale Aliyun IoT-Endpunkte
 
-### Fallback-System:
-- Bei Nichtverfügbarkeit → Realistische Demo-Daten
-- Alle Funktionen bleiben testbar
+### Betriebsmodus:
+- **Ausschließlich echte Mammotion-API**
+- **Keine Fallbacks oder Demo-Daten**
+- **Authentifizierung erforderlich für alle Funktionen**
 
 ## 🛑 BEENDEN
 

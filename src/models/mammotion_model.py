@@ -12,25 +12,8 @@ from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass
 from enum import Enum
 
-# Mammotion API imports
-try:
-    from .real_mammotion_api import RealMammotionAPI
-    REAL_API_AVAILABLE = True
-    logging.info("Echte Mammotion API wird verwendet")
-except ImportError as e:
-    REAL_API_AVAILABLE = False
-    logging.warning(f"Echte Mammotion API nicht verfügbar: {e}")
-
-# Fallback: PyMammotion (falls verfügbar)
-if not REAL_API_AVAILABLE:
-    try:
-        from pymammotion import MammotionHTTP
-        # MowerData wird nicht benötigt - wir verwenden unsere eigene MowerInfo-Klasse
-        PYMAMMOTION_AVAILABLE = True
-        logging.info("PyMammotion wird als Fallback verwendet")
-    except (ImportError, SyntaxError) as e:
-        PYMAMMOTION_AVAILABLE = False
-        logging.warning(f"PyMammotion nicht verfügbar - Mock-Modus aktiviert: {e}")
+# Mammotion API imports - ONLY real API, no fallbacks
+from .real_mammotion_api import RealMammotionAPI
 
 
 class MowerStatus(Enum):
@@ -72,20 +55,12 @@ class MammotionModel:
         self._is_connected: bool = False
         self._credentials: Optional[Dict[str, str]] = None
         
-        # API-Client initialisieren
-        if REAL_API_AVAILABLE:
-            self._api_client = RealMammotionAPI()
-            self._api_mode = "real"
-        elif PYMAMMOTION_AVAILABLE:
-            self._api_client = MammotionHTTP()
-            self._api_mode = "pymammotion"
-        else:
-            self._api_client = None
-            self._api_mode = "mock"
+        # API-Client initialisieren - NUR echte API
+        self._api_client = RealMammotionAPI()
         
         # Logging setup
         self.logger = logging.getLogger(__name__)
-        self.logger.info(f"MammotionModel initialisiert im {self._api_mode}-Modus")
+        self.logger.info("MammotionModel initialisiert mit echter Mammotion API")
         
     def _convert_local_to_mower_info(self, local_mower) -> MowerInfo:
         """Konvertiert LocalMowerInfo zu MowerInfo"""
@@ -132,7 +107,7 @@ class MammotionModel:
     
     async def login(self, email: str, password: str) -> bool:
         """
-        Authentifizierung bei Mammotion
+        Authentifizierung bei Mammotion - NUR echte API
         
         Args:
             email: E-Mail-Adresse
@@ -142,33 +117,16 @@ class MammotionModel:
             True wenn erfolgreich, False sonst
         """
         try:
-            if self._api_mode == "real":
-                # Echte API verwenden
-                success = await self._api_client.login(email, password)
-                if success:
-                    self._credentials = {"email": email, "password": password}
-                    self._is_connected = True
-                    self._notify_observers("login_success", {"email": email})
-                    return True
-                else:
-                    self._notify_observers("login_failed", {"error": "Login fehlgeschlagen"})
-                    return False
-                    
-            elif self._api_mode == "pymammotion":
-                # PyMammotion verwenden
-                # TODO: Implementiere echte PyMammotion-Authentifizierung
+            # NUR echte API verwenden - keine Fallbacks
+            success = await self._api_client.login(email, password)
+            if success:
                 self._credentials = {"email": email, "password": password}
                 self._is_connected = True
                 self._notify_observers("login_success", {"email": email})
                 return True
-                
             else:
-                # Mock-Modus für Entwicklung
-                self.logger.info("Mock-Login erfolgreich")
-                self._credentials = {"email": email, "password": password}
-                self._is_connected = True
-                self._notify_observers("login_success", {"email": email})
-                return True
+                self._notify_observers("login_failed", {"error": "Login fehlgeschlagen"})
+                return False
             
         except Exception as e:
             self.logger.error(f"Login fehlgeschlagen: {e}")
@@ -186,7 +144,7 @@ class MammotionModel:
         
     async def discover_mowers(self) -> List[MowerInfo]:
         """
-        Sucht nach verfügbaren Mähern
+        Sucht nach verfügbaren Mähern - NUR echte API
         
         Returns:
             Liste der gefundenen Mäher
@@ -195,19 +153,9 @@ class MammotionModel:
             raise RuntimeError("Nicht verbunden - bitte zuerst einloggen")
             
         try:
-            if self._api_mode == "real":
-                # Echte API verwenden
-                local_mowers = await self._api_client.discover_devices()
-                mowers = [self._convert_local_to_mower_info(local_mower) for local_mower in local_mowers]
-                
-            elif self._api_mode == "pymammotion":
-                # PyMammotion verwenden
-                # TODO: Implementiere echte PyMammotion-Geräteerkennung
-                mowers = self._create_mock_mowers()
-                
-            else:
-                # Mock-Modus
-                mowers = self._create_mock_mowers()
+            # NUR echte API verwenden - keine Fallbacks oder Mock-Daten
+            local_mowers = await self._api_client.discover_devices()
+            mowers = [self._convert_local_to_mower_info(local_mower) for local_mower in local_mowers]
             
             # Mäher in internem Cache speichern
             self._mowers.clear()
@@ -247,96 +195,54 @@ class MammotionModel:
         return list(self._mowers.values())
     
     async def start_mowing(self, device_id: Optional[str] = None) -> bool:
-        """Startet den Mähvorgang"""
+        """Startet den Mähvorgang - NUR echte API"""
         target_id = device_id or self._current_mower_id
         if not target_id or target_id not in self._mowers:
             return False
             
         try:
-            if self._api_mode == "real":
-                # Echte API verwenden
-                success = await self._api_client.start_mowing(target_id)
-                if success:
-                    self._mowers[target_id].status = MowerStatus.MOWING
-                    self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return success
-                
-            elif self._api_mode == "pymammotion":
-                # PyMammotion verwenden
-                # TODO: Implementiere echte PyMammotion-Steuerung
+            # NUR echte API verwenden - keine Mock-Implementierung
+            success = await self._api_client.start_mowing(target_id)
+            if success:
                 self._mowers[target_id].status = MowerStatus.MOWING
                 self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
-                
-            else:
-                # Mock-Implementierung
-                self._mowers[target_id].status = MowerStatus.MOWING
-                self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
+            return success
             
         except Exception as e:
             self.logger.error(f"Fehler beim Starten des Mähvorgangs: {e}")
             return False
     
     async def stop_mowing(self, device_id: Optional[str] = None) -> bool:
-        """Stoppt den Mähvorgang"""
+        """Stoppt den Mähvorgang - NUR echte API"""
         target_id = device_id or self._current_mower_id
         if not target_id or target_id not in self._mowers:
             return False
             
         try:
-            if self._api_mode == "real":
-                # Echte API verwenden
-                success = await self._api_client.stop_mowing(target_id)
-                if success:
-                    self._mowers[target_id].status = MowerStatus.PAUSED
-                    self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return success
-                
-            elif self._api_mode == "pymammotion":
-                # PyMammotion verwenden
-                # TODO: Implementiere echte PyMammotion-Steuerung
+            # NUR echte API verwenden - keine Mock-Implementierung
+            success = await self._api_client.stop_mowing(target_id)
+            if success:
                 self._mowers[target_id].status = MowerStatus.PAUSED
                 self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
-                
-            else:
-                # Mock-Implementierung
-                self._mowers[target_id].status = MowerStatus.PAUSED
-                self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
+            return success
             
         except Exception as e:
             self.logger.error(f"Fehler beim Stoppen des Mähvorgangs: {e}")
             return False
     
     async def return_to_dock(self, device_id: Optional[str] = None) -> bool:
-        """Schickt den Mäher zur Ladestation zurück"""
+        """Schickt den Mäher zur Ladestation zurück - NUR echte API"""
         target_id = device_id or self._current_mower_id
         if not target_id or target_id not in self._mowers:
             return False
             
         try:
-            if self._api_mode == "real":
-                # Echte API verwenden
-                success = await self._api_client.return_to_dock(target_id)
-                if success:
-                    self._mowers[target_id].status = MowerStatus.RETURNING
-                    self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return success
-                
-            elif self._api_mode == "pymammotion":
-                # PyMammotion verwenden
-                # TODO: Implementiere echte PyMammotion-Steuerung
+            # NUR echte API verwenden - keine Mock-Implementierung
+            success = await self._api_client.return_to_dock(target_id)
+            if success:
                 self._mowers[target_id].status = MowerStatus.RETURNING
                 self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
-                
-            else:
-                # Mock-Implementierung
-                self._mowers[target_id].status = MowerStatus.RETURNING
-                self._notify_observers("mower_status_changed", self._mowers[target_id])
-                return True
+            return success
             
         except Exception as e:
             self.logger.error(f"Fehler beim Zurücksenden zur Ladestation: {e}")
@@ -347,23 +253,19 @@ class MammotionModel:
         return self._is_connected
     
     async def refresh_status(self, device_id: Optional[str] = None) -> bool:
-        """Aktualisiert den Status eines Mähers"""
+        """Aktualisiert den Status eines Mähers - NUR echte API"""
         target_id = device_id or self._current_mower_id
         if not target_id or target_id not in self._mowers:
             return False
             
         try:
-            if not PYMAMMOTION_AVAILABLE:
-                # Mock-Update
-                import random
-                mower = self._mowers[target_id]
-                mower.battery_level = max(0, min(100, mower.battery_level + random.randint(-2, 3)))
-                mower.last_update = "2025-08-22T21:45:00Z"
-                self._notify_observers("mower_status_changed", mower)
+            # NUR echte API verwenden - keine Mock-Updates
+            updated_mower = await self._api_client.get_device_status(target_id)
+            if updated_mower:
+                self._mowers[target_id] = self._convert_local_to_mower_info(updated_mower)
+                self._notify_observers("mower_status_changed", self._mowers[target_id])
                 return True
-                
-            # TODO: Echte Implementierung
-            return True
+            return False
             
         except Exception as e:
             self.logger.error(f"Fehler beim Aktualisieren des Status: {e}")

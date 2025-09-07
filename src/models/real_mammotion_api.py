@@ -189,28 +189,10 @@ class RealMammotionAPI:
                         return mowers
                         
             except aiohttp.ClientError as e:
-                self.logger.warning(f"Geräte-API nicht erreichbar: {e}")
-            
-            # Fallback: Simuliere Mäher für Entwicklung
-            mock_device = {
-                'deviceId': f'real_device_{int(time.time())}',
-                'deviceName': 'Luba 2 AWD (Echt)',
-                'model': 'Luba 2 AWD',
-                'batteryLevel': 78,
-                'status': 'idle',
-                'position': {
-                    'latitude': 52.5200,
-                    'longitude': 13.4050
-                },
-                'lastUpdate': datetime.now().isoformat()
-            }
-            
-            mower = self._parse_device_data(mock_device)
-            if mower:
-                self._devices[mower.device_id] = mock_device
-                self.logger.info("Entwicklungs-Mäher erstellt")
-                return [mower]
+                self.logger.error(f"Geräte-API nicht erreichbar: {e}")
+                return []
                 
+            # Keine Fallbacks oder Mock-Daten - nur echte API
             return []
             
         except Exception as e:
