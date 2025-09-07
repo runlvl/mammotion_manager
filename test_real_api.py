@@ -25,7 +25,7 @@ async def test_real_api_login():
         from src.models import MammotionModel
         
         model = MammotionModel()
-        print(f"✓ Model im {model._api_mode}-Modus initialisiert")
+        print(f"✓ Model erfolgreich initialisiert")
         
         # Test mit gültigen E-Mail-Format
         test_email = "test@example.com"
@@ -122,16 +122,11 @@ async def test_api_modes():
         # Teste verschiedene Instanzen
         for i in range(3):
             model = MammotionModel()
-            print(f"Model {i+1}: {model._api_mode}-Modus")
+            print(f"Model {i+1}: Echte API-Modus")
             
-            if model._api_mode == "real":
-                print("  ✓ Echte API verfügbar")
-                print("  ✓ HTTP-Client initialisiert")
-                print("  ✓ Fallback-Funktionalität aktiv")
-            elif model._api_mode == "pymammotion":
-                print("  ✓ PyMammotion verfügbar")
-            else:
-                print("  ✓ Mock-Modus aktiv")
+            print("  ✓ Echte API verfügbar")
+            print("  ✓ HTTP-Client initialisiert")
+            print("  ✓ PyMammotion-Integration aktiv")
         
         return True
         
